@@ -31,7 +31,7 @@ Parameters:
       #- REPLACE_ON_FAILURE
   StackName: 
     Type: String
-    Default: "ss-net-vpc-ohio-test"
+    Default: "ss-infra-pipeline-ohio-test"
     # Convention: ss-<end>-<resource>-<service>-<region>-<env> ex. ss-fe-android-pipeline-ohio-test
   Capabilities: 
     Type: String
@@ -40,9 +40,9 @@ Parameters:
       #- CAPABILITY_IAM
       #- CAPABILITY_NAMED_IAM
       #- CAPABILITY_AUTO_EXPAND
-  Template-Path: 
+  TemplateLocation: 
     Type: String
-    Default: "BuildOutput::vpc.yml"
+    Default: "BuildOutput::ss-infra-pipeline.yml"
     # Format: "BuildOutput::<filename>" ex.  "BuildOutput::template.yml"
 
 Resources:
@@ -193,7 +193,7 @@ Resources:
               - Sid: CloudformationPolicy
                 Effect: Allow
                 Action: 
-                  - "cloudformation:DescribeStacks"
+                  - "cloudformation:*"
                 Resource: "*"
   
   CodePipelineArtifactStore:
@@ -272,7 +272,7 @@ Resources:
                   StackName: !Ref StackName
                   Capabilities: !Ref Capabilities
                   RoleArn: !Ref CodePipelineServiceRole.Arn
-                  TemplatePath: !Ref Template-Path
+                  TemplatePath: !Ref TemplateLocation
                 InputArtifacts:
                   - Name: BuildOutput
                 Region: !Ref Region
