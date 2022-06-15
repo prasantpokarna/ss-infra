@@ -46,24 +46,6 @@ Parameters:
     # Format: "BuildOutput::<filename>" ex.  "BuildOutput::template.yml"
 
 Resources:
-  CloudformationServiceRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: cloudformation.amazonaws.com
-            Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: root
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action: '*'
-                Resource: '*'
 
   CodeBuildServiceRole:
     Type: 'AWS::IAM::Role'
@@ -208,6 +190,10 @@ Resources:
                   - 'codebuild:BatchGetBuilds'
                   - 'codebuild:StartBuild'
                 Resource: '*'
+              - Sid: CloudformationPolicy
+                Effect: Allow
+                Action: "*"
+                Resource: "*"
   
   CodePipelineArtifactStore:
     Type: AWS::S3::Bucket
@@ -284,7 +270,7 @@ Resources:
                   ActionMode: !Ref CfnActionMode
                   StackName: !Ref StackName
                   Capabilities: !Ref Capabilities
-                  RoleArn: !Ref CloudformationServiceRole.Arn
+                  RoleArn: !Ref CodePipelineServiceRole.Arn
                   TemplatePath: !Ref Template-Path
                 InputArtifacts:
                   - Name: BuildOutput
