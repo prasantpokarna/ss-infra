@@ -19,26 +19,30 @@ Parameters:
     Default: 'aws/codebuild/amazonlinux2-x86_64-standard:3.0'
   Region:
     Type: String
-    Default: 'us-east-1'
-  CfnActionMode: "CREATE_UPDATE"
+    Default: 'us-east-2'
+  CfnActionMode: 
     Type: String
+    Default: "CREATE_UPDATE"
     #AllowedValues:
       #- CHANGE_SET_EXECUTE
       #- CHANGE_SET_REPLACE
       #- CREATE_UPDATE
       #- DELETE_ONLY
       #- REPLACE_ON_FAILURE
-  StackName: "ss-net-vpc-ohio-test"
+  StackName: 
     Type: String
+    Default: "ss-net-vpc-ohio-test"
     # Convention: ss-<end>-<resource>-<service>-<region>-<env> ex. ss-fe-android-pipeline-ohio-test
-  Capabilities: "CAPABILITY_IAM"
+  Capabilities: 
     Type: String
+    Default: "CAPABILITY_IAM"
     #AllowedValues:
       #- CAPABILITY_IAM
       #- CAPABILITY_NAMED_IAM
       #- CAPABILITY_AUTO_EXPAND
-  Template-Path: "BuildOutput::vpc.yml"
+  Template-Path: 
     Type: String
+    Default: "BuildOutput::vpc.yml"
     # Format: "BuildOutput::<filename>" ex.  "BuildOutput::template.yml"
 
 Resources:
