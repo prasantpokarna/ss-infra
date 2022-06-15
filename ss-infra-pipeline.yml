@@ -192,7 +192,8 @@ Resources:
                 Resource: '*'
               - Sid: CloudformationPolicy
                 Effect: Allow
-                Action: "cloudformation:*"
+                Action: 
+                  - "cloudformation:*"
                 Resource: "*"
   
   CodePipelineArtifactStore:
