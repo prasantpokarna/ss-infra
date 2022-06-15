@@ -193,7 +193,7 @@ Resources:
               - Sid: CloudformationPolicy
                 Effect: Allow
                 Action: 
-                  - "cloudformation:*"
+                  - "cloudformation:DescribeStacks"
                 Resource: "*"
   
   CodePipelineArtifactStore:
