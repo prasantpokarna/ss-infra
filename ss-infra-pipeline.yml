@@ -278,10 +278,9 @@ Resources:
                 ActionTypeId:
                   Category: Deploy
                   Owner: AWS
-                  Provider: AWS CloudFormation
+                  Provider: CloudFormation
                   Version: 1
                 Configuration:
-                  ProjectName: Cloudformation
                   ActionMode: !Ref CfnActionMode
                   StackName: !Ref StackName
                   Capabilities: !Ref Capabilities
