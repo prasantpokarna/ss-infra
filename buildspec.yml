@@ -1,0 +1,15 @@
+version: 0.2
+
+phases:
+  install: 
+    commands:
+      - echo Entering Install Phase
+  build:
+    commands:
+      - echo Entering Build Phase
+      - pwd
+      - ls -a
+
+artifacts:
+  files:
+    - '**/*'
