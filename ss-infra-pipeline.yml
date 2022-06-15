@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: CI/CD Pipeline for android
+Description: CI/CD Pipeline 
 
 Parameters:
   GitHubOwner:
@@ -20,7 +20,7 @@ Parameters:
   Region:
     Type: String
     Default: 'us-east-1'
-  CfnActionMode:
+  CfnActionMode: "CREATE_UPDATE"
     Type: String
     #AllowedValues:
       #- CHANGE_SET_EXECUTE
@@ -28,16 +28,16 @@ Parameters:
       #- CREATE_UPDATE
       #- DELETE_ONLY
       #- REPLACE_ON_FAILURE
-  StackName:
+  StackName: "ss-net-vpc-ohio-test"
     Type: String
     # Convention: ss-<end>-<resource>-<service>-<region>-<env> ex. ss-fe-android-pipeline-ohio-test
-  Capabilities:
+  Capabilities: "CAPABILITY_IAM"
     Type: String
     #AllowedValues:
       #- CAPABILITY_IAM
       #- CAPABILITY_NAMED_IAM
       #- CAPABILITY_AUTO_EXPAND
-  Template-Path:
+  Template-Path: "BuildOutput::vpc.yml"
     Type: String
     # Format: "BuildOutput::<filename>" ex.  "BuildOutput::template.yml"
 
