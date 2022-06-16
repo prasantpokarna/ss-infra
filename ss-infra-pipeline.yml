@@ -259,20 +259,15 @@ Resources:
               InputArtifacts:
                 - Name: SourceCode
 
-          - Name: Deploy
-            Actions:
-              - Name: Deploy
-                ActionTypeId:
-                  Category: Deploy
-                  Owner: AWS
-                  Provider: CloudFormation
-                  Version: 1
-                Configuration:
-                  ActionMode: !Ref CfnActionMode
-                  StackName: !Ref StackName
-                  Capabilities: !Ref Capabilities
-                  RoleArn: !Ref CodePipelineServiceRole.Arn
-                  TemplatePath: !Ref TemplateLocation
-                InputArtifacts:
-                  - Name: BuildOutput
-                Region: !Ref Region
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              TemplateConfiguration: "BuildOutput::template-configuration.json"
+              InputArtifacts:
+                - Name: BuildOutput
+              Region: !Ref Region

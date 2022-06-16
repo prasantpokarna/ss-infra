@@ -1,0 +1,9 @@
+{
+  "Parameters" : {
+    "Region": "us-east-2",
+    "CfnActionMode": "CREATE_UPDATE",
+    "StackName": "ss-infra-pipeline-ohio-test",
+    "Capabilities": "CAPABILITY_IAM",
+    "TemplateLocation": "BuildOutput::ss-infra-pipeline.yml"
+  }
+}
