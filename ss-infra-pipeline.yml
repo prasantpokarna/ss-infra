@@ -22,7 +22,7 @@ Parameters:
     Default: 'us-east-2'
   CfnActionMode: 
     Type: String
-    Default: "CREATE_UPDATE"
+    Default: CREATE_UPDATE
     #AllowedValues:
       #- CHANGE_SET_EXECUTE
       #- CHANGE_SET_REPLACE
@@ -31,11 +31,11 @@ Parameters:
       #- REPLACE_ON_FAILURE
   StackName: 
     Type: String
-    Default: "ss-infra-pipeline-ohio-test"
+    Default: ss-infra-pipeline-ohio-test
     # Convention: ss-<end>-<resource>-<service>-<region>-<env> ex. ss-fe-android-pipeline-ohio-test
   Capabilities: 
     Type: String
-    Default: "CAPABILITY_IAM"
+    Default: CAPABILITY_IAM
     #AllowedValues:
       #- CAPABILITY_IAM
       #- CAPABILITY_NAMED_IAM
@@ -268,7 +268,12 @@ Resources:
                 Provider: CloudFormation
                 Version: 1
               Configuration:
-                TemplateConfiguration: "BuildOutput::template-configuration.json"
+                ActionMode: !Ref CfnActionMode
+                StackName: !Ref StackName
+                Capabilities: !Ref Capabilities
+                RoleArn: !GetAtt CodePipelineServiceRole.Arn
+                TemplatePath: !Ref TemplateLocation
+                TemplateConfiguration: "BuildOutput::infra-template-configuration.json"
               InputArtifacts:
                 - Name: BuildOutput
               Region: !Ref Region
