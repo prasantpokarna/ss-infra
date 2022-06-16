@@ -267,7 +267,8 @@ Resources:
                 Owner: AWS
                 Provider: CloudFormation
                 Version: 1
-              TemplateConfiguration: "BuildOutput::template-configuration.json"
+              Configuration:
+                TemplateConfiguration: "BuildOutput::template-configuration.json"
               InputArtifacts:
                 - Name: BuildOutput
               Region: !Ref Region
