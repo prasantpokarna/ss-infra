@@ -267,12 +267,7 @@ Resources:
                 Owner: AWS
                 Provider: CloudFormation
                 Version: 1
-              Configuration:
-                ActionMode: !Ref CfnActionMode
-                StackName: !Ref StackName
-                Capabilities: !Ref Capabilities
-                RoleArn: !GetAtt CodePipelineServiceRole.Arn
-                TemplatePath: !Ref TemplateLocation
+              TemplateConfiguration: "BuildOutput::template-configuration.json"
               InputArtifacts:
                 - Name: BuildOutput
               Region: !Ref Region
