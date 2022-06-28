@@ -17,6 +17,7 @@ Parameters:
   CodeBuildEnvironmentImage:
     Type: String
     Default: 'aws/codebuild/amazonlinux2-x86_64-standard:3.0'
+  # Deploy Stage Parameters
   Region:
     Type: String
     Default: 'us-east-2'
@@ -44,6 +45,10 @@ Parameters:
     Type: String
     Default: "BuildOutput::ss-infra-pipeline.yml"
     # Format: "BuildOutput::<filename>" ex.  "BuildOutput::template.yml"
+  TemplateConfig:
+    Type: String
+    Default: "BuildOutput::infra-template-configuration.yml"
+    # Format: "BuildOutput::<filename>" ex. "BuildOutput::template-config.yml"
 
 Resources:
 
@@ -190,6 +195,37 @@ Resources:
                   - 'codebuild:BatchGetBuilds'
                   - 'codebuild:StartBuild'
                 Resource: '*'
+              - Sid: IAMPolicy
+                Effect: Allow
+                Action:
+                  - "iam:PassRole"
+                Resource: "*"
+              - Sid: CloudformationPolicy
+                Effect: Allow
+                Action: 
+                  - "cloudformation:*"
+                Resource: "*"
+
+  CloudformationServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: IAMPolicy
+                Effect: Allow
+                Action:
+                  - "iam:PassRole"
+                Resource: "*"
               - Sid: CloudformationPolicy
                 Effect: Allow
                 Action: 
@@ -268,12 +304,13 @@ Resources:
                 Provider: CloudFormation
                 Version: 1
               Configuration:
-                ActionMode: !Ref CfnActionMode
-                StackName: !Ref StackName
-                Capabilities: !Ref Capabilities
-                RoleArn: !GetAtt CodePipelineServiceRole.Arn
-                TemplatePath: !Ref TemplateLocation
-                TemplateConfiguration: "BuildOutput::infra-template-configuration.json"
+                ActionMode: {"Fn::GetParam" : ["BuildOutput", "infra-params.json", "ActionMode"]}
+                StackName: {"Fn::GetParam" : ["BuildOutput", "infra-params.json", "StackName"]}
+                Capabilities: {"Fn::GetParam" : ["BuildOutput", "infra-params.json", "Capabilities"]}
+                RoleArn: !GetAtt CloudformationServiceRole.Arn
+                TemplatePath: {"Fn::GetParam" : ["BuildOutput", "infra-params.json", "TemplatePath"]}
+                TemplateConfiguration: {"Fn::GetParam" : ["BuildOutput", "infra-params.json", "TemplateConfiguration"]}
+                #ParameterOverrides: "BuildOutput::parameter-override.json"
               InputArtifacts:
                 - Name: BuildOutput
-              Region: !Ref Region
+              Region: {"Fn::GetParam" : ["BuildOutput", "infra-params.json", "Region"]}
