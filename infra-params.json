@@ -1,0 +1,8 @@
+{
+  "ActionMode":"CREATE_UPDATE",
+  "StackName":"ss-network-vpc-ohio-test",
+  "Capabilities":"CAPABILITY_IAM",
+  "TemplatePath":"BuildOutput::ss-net-vpc-ohio-test.yml",
+  "TemplateConfiguration":"BuildOutput::template-configuration.yml",
+  "Region":"us-east-2"
+}
