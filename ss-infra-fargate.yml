@@ -1,0 +1,472 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description:
+  Infrastructure for ECS Fargate.
+
+Parameters:
+  Certificate:
+    Type: String
+    # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
+    Default: '2453019c-7bdf-43ca-ad5a-02df3f87a879'
+  SERVERENVIRONMENT:
+    Type: String
+    # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
+    Default: 'test'
+  VPCID:
+    Type: String
+    # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
+    Default: 'vpc-1197a978'
+  Subnetone:
+    Type: String
+    # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
+    Default: 'subnet-cc327cb7'
+  Subnettwo:
+    Type: String
+    # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
+    Default: 'subnet-ff53d9b2'
+  SecurityGroup1:
+    Type: String
+    # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
+    Default: 'sg-0e6c6742a4c59c19a'
+Resources:
+#EFS Service
+  EFSService:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: ENABLED
+      Encrypted: true
+      FileSystemTags:
+      - Key: Name
+        Value: !Sub "ss-efs-${SERVERENVIRONMENT}"
+      PerformanceMode: generalPurpose
+
+#EFS Mount Target 1
+  EFSMountTarget1:
+    Type: AWS::EFS::MountTarget
+    DependsOn: EFSService
+    Properties:
+      FileSystemId: !GetAtt EFSService.FileSystemId
+      #IpAddress: String
+      SecurityGroups:
+        - !Ref SecurityGroup1
+      SubnetId: !Ref Subnetone
+
+#EFS Mount Target 2
+  EFSMountTarget2:
+    Type: AWS::EFS::MountTarget
+    DependsOn: EFSService
+    Properties:
+      FileSystemId: !GetAtt EFSService.FileSystemId
+      #IpAddress: String
+      SecurityGroups:
+        - !Ref SecurityGroup1
+      SubnetId: !Ref Subnettwo
+
+#Load Balancer
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      #LoadBalancerAttributes:
+      #  - LoadBalancerAttribute
+      Name: !Sub "ssapi-alb-${SERVERENVIRONMENT}"
+      Scheme: "internet-facing"
+      Subnets:
+        - !Ref Subnetone
+        - !Ref Subnettwo
+      Type: "application"
+
+#Target Group V2
+  TargetGroupServicev2:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      #HealthCheckEnabled: Boolean
+      HealthCheckPath: "/api/v2/Demo"
+      HealthCheckPort: 80
+      HealthCheckProtocol: "HTTP"
+      HealthyThresholdCount: 5
+      Name: !Sub "ssapi-v2-targetgroup-${SERVERENVIRONMENT}"
+      Port: 80
+      Protocol: "HTTP"
+      ProtocolVersion: "HTTP1"
+      #Targets:
+       # Id: "172.31.0.31"
+        #Port: 80
+      TargetType: "ip"
+      VpcId: !Ref VPCID
+    
+#Target Group
+  TargetGroupService:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      #HealthCheckEnabled: Boolean
+      HealthCheckPath: "/api/Demo"
+      HealthCheckProtocol: "HTTP"
+      HealthyThresholdCount: 5
+      Name: !Sub "ssapi-target-group-${SERVERENVIRONMENT}"
+      Port: 8081
+      Protocol: "HTTP"
+      ProtocolVersion: "HTTP1"
+      #Targets:
+       # Id: "172.31.17.31"
+        #Port: 8080
+      TargetType: "ip"
+      VpcId: !Ref VPCID
+
+#HTTP Listener
+  HTTPlistener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - RedirectConfig:
+            Port: 443
+            Protocol: HTTPS
+            StatusCode: HTTP_301
+          Type: "redirect"
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: "HTTP"
+
+#HTTPS Listener
+  HTTPSlistener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+     # Certificates:
+      #  - CertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${Certificate}"
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroupService
+          Type: forward
+      LoadBalancerArn: !Ref LoadBalancer
+      #Port: 443
+      #Protocol: "HTTPS"
+      Port: 8080
+      Protocol: "HTTP"
+
+#HTTPS Listener Rule
+  LoadBalancerListenerRuleHTTPS:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    DependsOn: HTTPSlistener
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref TargetGroupServicev2
+          Type: forward
+      Conditions:
+        - Field: "path-pattern"
+          PathPatternConfig:
+            Values:
+              - "/api/v1/*"
+              - "/api/v1.1/*"
+              - "/swaggerv1/*"
+              - "/swagger/v1.0/*"
+              - "/swagger/v1.1/*"
+      ListenerArn: !Ref HTTPSlistener
+      Priority: 1
+
+#ECS Cluster
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "ss-api-${SERVERENVIRONMENT}"
+      CapacityProviders:
+        - FARGATE
+        - FARGATE_SPOT
+
+#ECS Task Definition V2
+  ECSTaskDefinitionv2:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+          - Cpu: 0
+            Environment:
+              - Name: ASPNETCORE_ENVIRONMENT
+                Value: test
+            Essential: true
+            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ssapi-v2-ecr-${SERVERENVIRONMENT}:latest"
+            MemoryReservation: 2048
+            Name: !Sub "ssapi-v2-container-${SERVERENVIRONMENT}"
+            PortMappings:
+              - ContainerPort: 80
+                HostPort: 80
+                Protocol: tcp
+            #RepositoryCredentials:
+            #RepositoryCredentials
+      Cpu: "1024"
+      #ExecutionRoleArn: !Ref ServiceLinkedRole
+      #ExecutionRoleArn: "arn:aws:iam::350031543021:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+      Family: !Sub "ssapi-v2-task-definition-${SERVERENVIRONMENT}"
+      Memory: "2048"
+      NetworkMode: "awsvpc"
+      RequiresCompatibilities:
+        - FARGATE
+      RuntimePlatform:
+          OperatingSystemFamily: "LINUX"
+      #TaskRoleArn: !Ref ServiceLinkedRole
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+
+#ECS Service V2
+  ECSServicev2:
+    Type: AWS::ECS::Service
+    DependsOn: LoadBalancerListenerRuleHTTPS
+    Properties:
+      Cluster: !Ref ECSCluster
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker:
+          Enable: false
+          Rollback: false
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: !Sub "ssapi-v2-container-${SERVERENVIRONMENT}"
+          ContainerPort: 80
+          #LoadBalancerName: !Sub "ssapi-alb-${SERVERENVIRONMENT}"
+          TargetGroupArn: !Ref TargetGroupServicev2
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref SecurityGroup1
+          Subnets:
+            - !Ref Subnetone
+            - !Ref Subnettwo
+      #Role: !Ref ServiceLinkedRole
+      SchedulingStrategy: REPLICA
+      ServiceName: !Sub "ssapi-v2-service-${SERVERENVIRONMENT}"
+      TaskDefinition: !Ref ECSTaskDefinitionv2
+
+#ECS Service
+  ECSServiceservice:
+    Type: AWS::ECS::Service
+    DependsOn: LoadBalancerListenerRuleHTTPS
+    Properties:
+      Cluster: !Ref ECSCluster
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker:
+          Enable: false
+          Rollback: false
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: !Sub "ssapi-container-${SERVERENVIRONMENT}"
+          ContainerPort: 8080
+          #LoadBalancerName: !Sub "ssapi-alb-${SERVERENVIRONMENT}"
+          TargetGroupArn: !Ref TargetGroupService
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref SecurityGroup1
+          Subnets:
+            - !Ref Subnetone
+            - !Ref Subnettwo
+      #Role: !Ref ServiceLinkedRole
+      SchedulingStrategy: REPLICA
+      ServiceName: !Sub "ssapi-service-${SERVERENVIRONMENT}"
+      TaskDefinition: !Ref ECSTaskDefinitionservice
+
+#ECS Task Definition Service
+  ECSTaskDefinitionservice:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+          - Command:
+              #- "/opt/app/start-server.sh"
+              - "ls"
+            Cpu: 0
+            Essential: true
+            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ssapi-ecr-${SERVERENVIRONMENT}:latest"
+            LogConfiguration:
+                LogDriver: awslogs
+                Options:
+                  awslogs-group : !Sub "/ecs/ssapi-task-definition-${SERVERENVIRONMENT}"
+                  awslogs-region : !Sub ${AWS::Region}
+                  awslogs-stream-prefix : ecs
+            Memory: 2048
+            #MemoryReservation: Integer
+            MountPoints:
+                - ContainerPath: "/.ssapi_cache"
+                  ReadOnly: true
+                  SourceVolume: !Sub "ssapi-efs-${SERVERENVIRONMENT}"
+            Name: !Sub "ssapi-container-${SERVERENVIRONMENT}"
+            PortMappings:
+                - ContainerPort: 8080
+                  HostPort: 8080
+                  Protocol: tcp
+            Secrets:
+                - Name: "SERVER_ENV"
+                  ValueFrom: !Sub "/ssapi/${SERVERENVIRONMENT}/SERVER_ENV"
+      Cpu: 1024
+      #ExecutionRoleArn: !Ref ServiceLinkedRole
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+      Family: !Sub "ssapi-task-definition-${SERVERENVIRONMENT}"
+      Memory: 2048
+      NetworkMode: "awsvpc"
+      RequiresCompatibilities:
+        - FARGATE
+      RuntimePlatform:
+          OperatingSystemFamily: LINUX
+      #TaskRoleArn: !Ref ServiceLinkedRole
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+      Volumes:
+          - EFSVolumeConfiguration:
+              FilesystemId: !GetAtt EFSService.FileSystemId
+            Name: !Sub "ssapi-efs-${SERVERENVIRONMENT}"
+
+#Batch ECS Service
+  ECSServicebatch:
+    Type: AWS::ECS::Service
+    DependsOn: LoadBalancerListenerRuleHTTPS
+    Properties:
+      Cluster: !Ref ECSCluster
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker:
+          Enable: false
+          Rollback: false
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+          AwsvpcConfiguration:
+              AssignPublicIp: ENABLED
+              SecurityGroups:
+                - !Ref SecurityGroup1
+              Subnets:
+                - !Ref Subnetone
+                - !Ref Subnettwo
+      #Role: !Ref ServiceLinkedRole
+      SchedulingStrategy: REPLICA
+      ServiceName: !Sub "ssapi-batch-service-${SERVERENVIRONMENT}"
+      TaskDefinition: !Ref ECSTaskDefinitionBatch
+
+#Batch ECS Task Definition
+  ECSTaskDefinitionBatch:
+    Type: AWS::ECS::TaskDefinition
+    DependsOn:
+      - EFSMountTarget1
+      - EFSMountTarget2
+    Properties:
+      ContainerDefinitions:
+          - Command:
+              #- "/opt/app/start-batch.sh"
+              - "ls"
+            Cpu: 0
+            Essential: true
+            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ssapi-ecr-${SERVERENVIRONMENT}:latest"
+            MemoryReservation: 2048
+            MountPoints:
+              - ContainerPath: "/.ssapi_cache"
+                ReadOnly: false
+                SourceVolume: !Sub "ssapi-efs-${SERVERENVIRONMENT}"
+            Name: !Sub "ssapi-container-${SERVERENVIRONMENT}"
+            Secrets:
+              - Name: "SERVER_ENV"
+                ValueFrom: !Sub "/ssapi/${SERVERENVIRONMENT}/SERVER_ENV"
+      Cpu: "1024"
+      #ExecutionRoleArn: !Ref ServiceLinkedRole
+      ExecutionRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+      Family: !Sub "ssapi-batch-task-definition-${SERVERENVIRONMENT}"
+      Memory: "2048"
+      NetworkMode: "awsvpc"
+      RequiresCompatibilities:
+        - FARGATE
+      RuntimePlatform:
+        OperatingSystemFamily: "LINUX"
+      #TaskRoleArn: !Ref ServiceLinkedRole
+      TaskRoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/ecsTaskExecutionRole"
+      Volumes:
+        - EFSVolumeConfiguration:
+            FilesystemId: !GetAtt EFSService.FileSystemId
+          Name: !Sub "ssapi-efs-${SERVERENVIRONMENT}"
+
+#S3 Service
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DependsOn: InvokeLambda
+    Properties:
+      BucketName: !Sub "shear-${SERVERENVIRONMENT}"
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: media/
+            Function: !GetAtt LambdaFunction.Arn
+
+#Lambda Function
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+          ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ssapi-lambs-ecr-${SERVERENVIRONMENT}:latest"
+          #S3Bucket: "arn:aws:s3:::codepipeline-us-east-2-887298907548"
+          #S3Key: String
+          #S3ObjectVersion: String
+          #ZipFile: String
+      #DeadLetterConfig:
+       # DeadLetterConfig
+      #Description: String
+      Environment:
+          Variables:
+            SERVER_ENV : !Sub "${SERVERENVIRONMENT}"
+      #EphemeralStorage:
+       #  Size: Integer
+      FunctionName: !Sub "ssapi-lambs-thumb-${SERVERENVIRONMENT}"
+      #Handler: String
+      ImageConfig:
+        Command:
+          - thumbnail_lambda.handler
+        #EntryPoint:
+        #  - String
+        #WorkingDirectory: String
+      #KmsKeyArn: String
+      #Layers:
+       # - String
+      MemorySize: 1024
+      PackageType: Image
+      #ReservedConcurrentExecutions: Integer
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/ssapi-lambs-test-service-role"
+      #TracingConfig:
+       # Mode: String
+
+#Create Publish
+  PublishVersion:
+    Type: AWS::Lambda::Version
+    DependsOn: LambdaFunction
+    Properties:
+      #CodeSha256: String
+      #Description: String
+      FunctionName: !Ref LambdaFunction
+
+#Create Alias
+  LambdaAlias:
+    Type: AWS::Lambda::Alias
+    DependsOn: PublishVersion
+    Properties:
+      #Description: String
+      FunctionName: !Ref LambdaFunction
+      FunctionVersion: !GetAtt PublishVersion.Version
+      Name: !Sub "ssapi-la-th-${SERVERENVIRONMENT}"
+
+#Invoke Permission
+  InvokeLambda:
+    Type: AWS::Lambda::Permission
+    #DependsOn: LambdaAlias
+    Properties:
+      Action: lambda:InvokeFunction
+      #EventSourceToken: String
+      FunctionName: !Ref LambdaFunction
+      #FunctionUrlAuthType: String
+      Principal: s3.amazonaws.com
+      #PrincipalOrgID: String
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub "arn:aws:s3:::shear-${SERVERENVIRONMENT}"
+
+
