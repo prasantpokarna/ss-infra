@@ -209,7 +209,7 @@ Resources:
 #ECS Service V2
   ECSServicev2:
     Type: AWS::ECS::Service
-    DependsOn: LoadBalancerListenerRuleHTTPS
+    DependsOn: HTTPSlistener
     Properties:
       Cluster: !Ref ECSCluster
       DeploymentConfiguration:
@@ -241,7 +241,7 @@ Resources:
 #ECS Service
   ECSServiceservice:
     Type: AWS::ECS::Service
-    DependsOn: LoadBalancerListenerRuleHTTPS
+    DependsOn: HTTPSlistener
     Properties:
       Cluster: !Ref ECSCluster
       DeploymentConfiguration:
@@ -321,7 +321,7 @@ Resources:
 #Batch ECS Service
   ECSServicebatch:
     Type: AWS::ECS::Service
-    DependsOn: LoadBalancerListenerRuleHTTPS
+    DependsOn: HTTPSlistener
     Properties:
       Cluster: !Ref ECSCluster
       DeploymentConfiguration:
