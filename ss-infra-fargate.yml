@@ -158,7 +158,7 @@ Resources:
               - "/api/v1/*"
               - "/api/v1.1/*"
               - "/swaggerv1/*"
-              - "/swagger/v1.0/*"
+              #- "/swagger/v1.0/*"
               - "/swagger/v1.1/*"
               - "/swagger/v1.2/*"
       ListenerArn: !Ref HTTPSlistener
