@@ -144,25 +144,25 @@ Resources:
       Protocol: "HTTP"
 
 #HTTPS Listener Rule
-  LoadBalancerListenerRuleHTTPS:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    DependsOn: HTTPSlistener
-    Properties:
-      Actions:
-        - TargetGroupArn: !Ref TargetGroupServicev2
-          Type: forward
-      Conditions:
-        - Field: "path-pattern"
-          PathPatternConfig:
-            Values:
-              - "/api/v1/*"
-              - "/api/v1.1/*"
-              - "/swaggerv1/*"
+ # LoadBalancerListenerRuleHTTPS:
+  #  Type: AWS::ElasticLoadBalancingV2::ListenerRule
+   # DependsOn: HTTPSlistener
+   # Properties:
+   #   Actions:
+   #     - TargetGroupArn: !Ref TargetGroupServicev2
+   #       Type: forward
+   #   Conditions:
+   #     - Field: "path-pattern"
+   #       PathPatternConfig:
+   #         Values:
+             # - "/api/v1/*"
+             # - "/api/v1.1/*"
+             # - "/swaggerv1/*"
               #- "/swagger/v1.0/*"
-              - "/swagger/v1.1/*"
-              - "/swagger/v1.2/*"
-      ListenerArn: !Ref HTTPSlistener
-      Priority: 1
+             # - "/swagger/v1.1/*"
+             # - "/swagger/v1.2/*"
+    #  ListenerArn: !Ref HTTPSlistener
+    #  Priority: 1
 
 #ECS Cluster
   ECSCluster:
