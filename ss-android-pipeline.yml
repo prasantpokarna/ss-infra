@@ -74,13 +74,6 @@ Resources:
                   - 's3:GetBucketAcl'
                   - 's3:GetBucketLocation'
                 Resource: '*'
-        
-  CodeBuildSourceCredential:
-    Type: AWS::CodeBuild::SourceCredential
-    Properties:
-      AuthType: PERSONAL_ACCESS_TOKEN
-      ServerType: GITHUB
-      Token: "{{resolve:secretsmanager:GITHUB_ACCESS_TOKEN:SecretString:GITHUB_ACCESS_TOKEN}}"
 
   CodeBuild:
     Type: 'AWS::CodeBuild::Project'
@@ -93,7 +86,7 @@ Resources:
         BuildSpec: buildspec.yml
         Auth:
           Type: OAUTH
-          Resource: !Ref CodeBuildSourceCredential
+          Resource: "{{resolve:secretsmanager:GITHUB_ACCESS_TOKEN:SecretString:GITHUB_ACCESS_TOKEN}}"
       Artifacts:
         Type: NO_ARTIFACTS
       Triggers:
