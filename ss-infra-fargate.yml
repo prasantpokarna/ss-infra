@@ -7,7 +7,7 @@ Parameters:
   Certificate:
     Type: String
     # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
-    Default: '2453019c-7bdf-43ca-ad5a-02df3f87a879'
+    Default: '026f1e14-857c-4f66-88da-e9164e068e4b'
   SERVERENVIRONMENT:
     Type: String
     # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
@@ -132,16 +132,16 @@ Resources:
   HTTPSlistener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
-     # Certificates:
-      #  - CertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${Certificate}"
+      Certificates:
+        - CertificateArn: !Sub "arn:aws:acm:${AWS::Region}:${AWS::AccountId}:certificate/${Certificate}"
       DefaultActions:
         - TargetGroupArn: !Ref TargetGroupService
           Type: forward
       LoadBalancerArn: !Ref LoadBalancer
-      #Port: 443
-      #Protocol: "HTTPS"
-      Port: 8080
-      Protocol: "HTTP"
+      Port: 443
+      Protocol: "HTTPS"
+      #Port: 8080
+      #Protocol: "HTTP"
 
 #HTTPS Listener Rule
   LoadBalancerListenerRuleHTTPS:
