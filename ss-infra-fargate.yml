@@ -251,7 +251,7 @@ Resources:
       DesiredCount: 1
       LaunchType: FARGATE
       LoadBalancers:
-        - ContainerName: !Sub "ssapi-v2-container-${SERVERENVIRONMENT}"
+        - ContainerName: !Sub "ssapi-v2-container-second-${SERVERENVIRONMENT}"
           ContainerPort: 80
           #LoadBalancerName: !Sub "ssapi-alb-${SERVERENVIRONMENT}"
           TargetGroupArn: !Ref TargetGroupServicev2
