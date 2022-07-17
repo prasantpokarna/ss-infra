@@ -251,7 +251,7 @@ Resources:
       DesiredCount: 1
       LaunchType: FARGATE
       LoadBalancers:
-        - ContainerName: !Sub "ssapi-v2-container-second-${SERVERENVIRONMENT}"
+        - ContainerName: !Sub "ssapi-v2-container-${SERVERENVIRONMENT}"
           ContainerPort: 80
           #LoadBalancerName: !Sub "ssapi-alb-${SERVERENVIRONMENT}"
           TargetGroupArn: !Ref TargetGroupServicev2
@@ -265,7 +265,7 @@ Resources:
             - !Ref Subnettwo
       #Role: !Ref ServiceLinkedRole
       SchedulingStrategy: REPLICA
-      ServiceName: !Sub "ssapi-v2-service-${SERVERENVIRONMENT}"
+      ServiceName: !Sub "ssapi-v2-service-second-${SERVERENVIRONMENT}"
       TaskDefinition: !Ref ECSTaskDefinitionv2
 
 
