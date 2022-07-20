@@ -11,7 +11,7 @@ Parameters:
   SERVERENVIRONMENT:
     Type: String
     # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
-    Default: 'test'
+    Default: 'stage'
   VPCID:
     Type: String
     # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
@@ -38,7 +38,7 @@ Resources:
       Encrypted: true
       FileSystemTags:
       - Key: Name
-        Value: !Sub "ss-efs-${SERVERENVIRONMENT}"
+        Value: !Sub "ssapi-efs-${SERVERENVIRONMENT}"
       PerformanceMode: generalPurpose
 
 #EFS Mount Target 1
@@ -167,7 +167,7 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Sub "ss-api-${SERVERENVIRONMENT}"
+      ClusterName: !Sub "ssapi-${SERVERENVIRONMENT}"
       CapacityProviders:
         - FARGATE
         - FARGATE_SPOT
@@ -217,7 +217,7 @@ Resources:
           Rollback: false
         MaximumPercent: 200
         MinimumHealthyPercent: 100
-      DesiredCount: 1
+      DesiredCount: 2
       LaunchType: FARGATE
       LoadBalancers:
         - ContainerName: !Sub "ssapi-v2-container-${SERVERENVIRONMENT}"
@@ -236,38 +236,6 @@ Resources:
       SchedulingStrategy: REPLICA
       ServiceName: !Sub "ssapi-v2-service-${SERVERENVIRONMENT}"
       TaskDefinition: !Ref ECSTaskDefinitionv2
-      
-  ECSServiceSecondv2:
-    Type: AWS::ECS::Service
-    DependsOn: LoadBalancerListenerRuleHTTPS
-    Properties:
-      Cluster: !Ref ECSCluster
-      DeploymentConfiguration:
-        DeploymentCircuitBreaker:
-          Enable: false
-          Rollback: false
-        MaximumPercent: 200
-        MinimumHealthyPercent: 100
-      DesiredCount: 1
-      LaunchType: FARGATE
-      LoadBalancers:
-        - ContainerName: !Sub "ssapi-v2-container-${SERVERENVIRONMENT}"
-          ContainerPort: 80
-          #LoadBalancerName: !Sub "ssapi-alb-${SERVERENVIRONMENT}"
-          TargetGroupArn: !Ref TargetGroupServicev2
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          SecurityGroups:
-            - !Ref SecurityGroup1
-          Subnets:
-            - !Ref Subnetone
-            - !Ref Subnettwo
-      #Role: !Ref ServiceLinkedRole
-      SchedulingStrategy: REPLICA
-      ServiceName: !Sub "ssapi-v2-service-second-${SERVERENVIRONMENT}"
-      TaskDefinition: !Ref ECSTaskDefinitionv2
-
 
 #ECS Service
   ECSServiceservice:
@@ -500,5 +468,3 @@ Resources:
       #PrincipalOrgID: String
       SourceAccount: !Ref AWS::AccountId
       SourceArn: !Sub "arn:aws:s3:::shear-${SERVERENVIRONMENT}"
-
-
