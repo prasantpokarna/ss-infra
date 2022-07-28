@@ -11,7 +11,7 @@ Parameters:
   SERVERENVIRONMENT:
     Type: String
     # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
-    Default: 'stage'
+    Default: 'prod'
   VPCID:
     Type: String
     # Update with the certificate ARN from Certificate Manager, which must exist in the same region.
@@ -182,7 +182,7 @@ Resources:
               - Name: ASPNETCORE_ENVIRONMENT
                 Value: test
             Essential: true
-            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ssapi-v2-ecr-${SERVERENVIRONMENT}:latest"
+            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ss-v2-ecr-${SERVERENVIRONMENT}:latest"
             MemoryReservation: 2048
             Name: !Sub "ssapi-v2-container-${SERVERENVIRONMENT}"
             PortMappings:
@@ -279,11 +279,11 @@ Resources:
               - "ls"
             Cpu: 0
             Essential: true
-            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ssapi-ecr-${SERVERENVIRONMENT}:latest"
+            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ss-ecr-${SERVERENVIRONMENT}:latest"
             LogConfiguration:
                 LogDriver: awslogs
                 Options:
-                  awslogs-group : !Sub "/ecs/ssapi-task-definition-${SERVERENVIRONMENT}"
+                  awslogs-group : !Sub "/ecs/ssapi-service-${SERVERENVIRONMENT}"
                   awslogs-region : !Sub ${AWS::Region}
                   awslogs-stream-prefix : ecs
             Memory: 2048
@@ -357,7 +357,7 @@ Resources:
               - "ls"
             Cpu: 0
             Essential: true
-            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ssapi-ecr-${SERVERENVIRONMENT}:latest"
+            Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ss-ecr-${SERVERENVIRONMENT}:latest"
             MemoryReservation: 2048
             MountPoints:
               - ContainerPath: "/.ssapi_cache"
@@ -389,7 +389,7 @@ Resources:
     Type: AWS::S3::Bucket
     DependsOn: InvokeLambda
     Properties:
-      BucketName: !Sub "shear-${SERVERENVIRONMENT}"
+      BucketName: !Sub "ssapi-s3-${SERVERENVIRONMENT}"
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: s3:ObjectCreated:*
@@ -397,7 +397,23 @@ Resources:
               S3Key:
                 Rules:
                   - Name: prefix
-                    Value: media/
+                    Value: public/
+            Function: !GetAtt LambdaFunction.Arn
+           
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DependsOn: InvokeLambda
+    Properties:
+      PolicyDocument: ""
+      BucketName: !Sub "ssapi-s3-thumb-${SERVERENVIRONMENT}"
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: public/
             Function: !GetAtt LambdaFunction.Arn
 
 #Lambda Function
@@ -467,4 +483,4 @@ Resources:
       Principal: s3.amazonaws.com
       #PrincipalOrgID: String
       SourceAccount: !Ref AWS::AccountId
-      SourceArn: !Sub "arn:aws:s3:::shear-${SERVERENVIRONMENT}"
+      SourceArn: !Sub "arn:aws:s3:::ssapi-${SERVERENVIRONMENT}"
