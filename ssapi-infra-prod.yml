@@ -468,3 +468,241 @@ Resources:
       #PrincipalOrgID: String
       SourceAccount: !Ref AWS::AccountId
       SourceArn: !Sub "arn:aws:s3:::ssapi-${SERVERENVIRONMENT}"
+
+  #SQS Service
+  SQSNotificationService:
+    Type: AWS::SQS::Queue
+    Properties:
+      #ContentBasedDeduplication: Boolean
+      #DeduplicationScope: String
+      #DelaySeconds: Integer
+      FifoQueue: true
+      #FifoThroughputLimit: String
+      #KmsDataKeyReusePeriodSeconds: Integer
+      #KmsMasterKeyId: String
+      #MaximumMessageSize: Integer
+      #MessageRetentionPeriod: Integer
+      QueueName: !Sub "ssapi-sqs-notification-${SERVERENVIRONMENT}.fifo"
+      #ReceiveMessageWaitTimeSeconds: Integer
+      #RedriveAllowPolicy: Json
+      #RedrivePolicy: Json
+      #SqsManagedSseEnabled: Boolean
+      #Tags:
+       # - Tag
+      #VisibilityTimeout: Integer
+
+  #SQSPolicy
+  SQSNotificationServicePolicy:
+    Type: AWS::SQS::QueuePolicy
+    DependsOn: SQSNotificationService
+    Properties:
+      Queues:
+        - !GetAtt SQSNotificationService.QueueUrl
+      PolicyDocument:
+        Version: 2012-10-17
+        Id: "__default_policy_ID"
+        Statement:
+          - Sid: "__owner_statement"
+            Action:
+              - "SQS:*"
+            Effect: "Allow"
+            Resource: !GetAtt SQSNotificationService.Arn
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${AWS::AccountId}:root"
+      
+  #SQS Service
+  SQSInsuranceService:
+    Type: AWS::SQS::Queue
+    Properties:
+      #ContentBasedDeduplication: Boolean
+      #DeduplicationScope: String
+      #DelaySeconds: Integer
+      FifoQueue: true
+      #FifoThroughputLimit: String
+      #KmsDataKeyReusePeriodSeconds: Integer
+      #KmsMasterKeyId: String
+      #MaximumMessageSize: Integer
+      #MessageRetentionPeriod: Integer
+      QueueName: !Sub "ssapi-sqs-insurance-${SERVERENVIRONMENT}.fifo"
+      #ReceiveMessageWaitTimeSeconds: Integer
+      #RedriveAllowPolicy: Json
+      #RedrivePolicy: Json
+      #SqsManagedSseEnabled: Boolean
+      #Tags:
+       # - Tag
+      #VisibilityTimeout: Integer
+
+  #SQSPolicy
+  SQSInsuranceServicePolicy:
+    Type: AWS::SQS::QueuePolicy
+    DependsOn: SQSInsuranceService
+    Properties:
+      Queues:
+        - !GetAtt SQSInsuranceService.QueueUrl
+      PolicyDocument:
+        Version: 2012-10-17
+        Id: "__default_policy_ID"
+        Statement:
+          - Sid: "__owner_statement"
+            Action:
+              - "SQS:*"
+            Effect: "Allow"
+            Resource: !GetAtt SQSInsuranceService.Arn
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${AWS::AccountId}:root"
+
+  #SQS Service
+  SQSErrorService:
+    Type: AWS::SQS::Queue
+    Properties:
+      #ContentBasedDeduplication: Boolean
+      #DeduplicationScope: String
+      #DelaySeconds: Integer
+      FifoQueue: true
+      #FifoThroughputLimit: String
+      #KmsDataKeyReusePeriodSeconds: Integer
+      #KmsMasterKeyId: String
+      #MaximumMessageSize: Integer
+      #MessageRetentionPeriod: Integer
+      QueueName: !Sub "ssapi-sqs-error-${SERVERENVIRONMENT}.fifo"
+      #ReceiveMessageWaitTimeSeconds: Integer
+      #RedriveAllowPolicy: Json
+      #RedrivePolicy: Json
+      #SqsManagedSseEnabled: Boolean
+      #Tags:
+       # - Tag
+      #VisibilityTimeout: Integer
+
+  #SQSPolicy
+  SQSErrorServicePolicy:
+    Type: AWS::SQS::QueuePolicy
+    DependsOn: SQSErrorService
+    Properties:
+      Queues:
+        - !GetAtt SQSErrorService.QueueUrl
+      PolicyDocument:
+        Version: 2012-10-17
+        Id: "__default_policy_ID"
+        Statement:
+          - Sid: "__owner_statement"
+            Action:
+              - "SQS:*"
+            Effect: "Allow"
+            Resource: !GetAtt SQSErrorService.Arn
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${AWS::AccountId}:root"
+
+  #SNS Service
+  SNSErrorService:
+    Type: AWS::SNS::Topic
+    Properties:
+      #ContentBasedDeduplication: Boolean
+      DisplayName: !Sub "ssapi-error-sns-${SERVERENVIRONMENT}"
+      #FifoTopic: Boolean
+      #KmsMasterKeyId: String
+      #Subscription:
+      #  - Subscription
+      #Tags:
+      #  - Tag
+      TopicName: !Sub "ssapi-error-sns-${SERVERENVIRONMENT}"
+
+  #SNS Service Topic Policy
+  SNSErrorServicePolicy:
+    Type: AWS::SNS::TopicPolicy
+    DependsOn: SNSErrorService
+    Properties:
+      PolicyDocument:
+        {
+          "Version": "2008-10-17",
+          "Id": "__default_policy_ID",
+          "Statement": [
+            {
+              "Sid": "__default_statement_ID",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*"
+              },
+              "Action": [
+                "SNS:GetTopicAttributes",
+                "SNS:SetTopicAttributes",
+                "SNS:AddPermission",
+                "SNS:RemovePermission",
+                "SNS:DeleteTopic",
+                "SNS:Subscribe",
+                "SNS:ListSubscriptionsByTopic",
+                "SNS:Publish"
+              ],
+              "Resource": { "Fn::Sub" : "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:ssapi-error-sns-${SERVERENVIRONMENT}"},
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceOwner": { "Fn::Sub" : "${AWS::AccountId}" }
+                }
+              }
+            }
+          ]
+        }
+      Topics:
+        - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:ssapi-error-sns-${SERVERENVIRONMENT}"
+        #- !GetAtt SNSErrorService.TopicName
+
+  #S3 Bucket
+  S3BucketThumb:
+    Type: AWS::S3::Bucket
+    Properties:
+      #AccelerateConfiguration:
+       # AccelerateConfiguration
+      #AccessControl: String
+      #AnalyticsConfigurations:
+       # - AnalyticsConfiguration
+      #BucketEncryption:
+      #  BucketEncryption
+      BucketName: !Sub "ssapi-s3-${SERVERENVIRONMENT}-thumb"
+      #CorsConfiguration:
+      #  CorsConfiguration
+      #IntelligentTieringConfigurations:
+      #  - IntelligentTieringConfiguration
+      #InventoryConfigurations:
+      #  - InventoryConfiguration
+      #LifecycleConfiguration:
+      #  LifecycleConfiguration
+      #LoggingConfiguration:
+      #  LoggingConfiguration
+      #MetricsConfigurations:
+      #  - MetricsConfiguration
+      #NotificationConfiguration:
+      #  NotificationConfiguration
+      #ObjectLockConfiguration:
+      #  ObjectLockConfiguration
+      #ObjectLockEnabled: Boolean
+      #OwnershipControls:
+      #  OwnershipControls
+      #PublicAccessBlockConfiguration:
+      #  PublicAccessBlockConfiguration
+      #ReplicationConfiguration:
+      #  ReplicationConfiguration
+      #Tags:
+      #  - Tag
+      #VersioningConfiguration:
+      #  VersioningConfiguration
+      #WebsiteConfiguration:
+      #  WebsiteConfiguration
+
+  #S3BucketPolicy
+  S3BucketThumbPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Sub "ssapi-s3-${SERVERENVIRONMENT}-thumb"
+      PolicyDocument:
+        Version: 2012-10-17
+        Id: "Policy1647928401531"
+        Statement:
+          - Sid: "Stmt1647928393990"
+            Effect: "Allow"
+            Action:
+              - "s3:GetObject"
+            Resource: !Sub "arn:aws:s3:::ssapi-s3-${SERVERENVIRONMENT}-thumb/*"
+            #Resource: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:ssapi-s3-${SERVERENVIRONMENT}-thumb"
+            Principal: "*"
