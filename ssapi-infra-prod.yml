@@ -275,8 +275,8 @@ Resources:
     Properties:
       ContainerDefinitions:
           - Command:
-              #- "/opt/app/start-server.sh"
-              - "ls"
+              - "/opt/app/start-server.sh"
+              #- "ls"
             Cpu: 0
             Essential: true
             Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ss-ecr-${SERVERENVIRONMENT}:latest"
@@ -353,8 +353,8 @@ Resources:
     Properties:
       ContainerDefinitions:
           - Command:
-              #- "/opt/app/start-batch.sh"
-              - "ls"
+              - "/opt/app/start-batch.sh"
+              #- "ls"
             Cpu: 0
             Essential: true
             Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/ss-ecr-${SERVERENVIRONMENT}:latest"
