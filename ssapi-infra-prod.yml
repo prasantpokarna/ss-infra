@@ -399,22 +399,6 @@ Resources:
                   - Name: prefix
                     Value: public/
             Function: !GetAtt LambdaFunction.Arn
-           
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    DependsOn: InvokeLambda
-    Properties:
-      PolicyDocument: ""
-      BucketName: !Sub "ssapi-s3-thumb-${SERVERENVIRONMENT}"
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Event: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: prefix
-                    Value: public/
-            Function: !GetAtt LambdaFunction.Arn
 
 #Lambda Function
   LambdaFunction:
