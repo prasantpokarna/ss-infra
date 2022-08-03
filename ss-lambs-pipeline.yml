@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: CI/CD Pipeline for service-v2 application.
+Description: CI/CD Pipeline for lambs application.
 
 Parameters:
   GitHubOwner:
